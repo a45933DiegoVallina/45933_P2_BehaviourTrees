@@ -8,10 +8,12 @@ public class RobBehaviour : MonoBehaviour
     BehaviourTree tree;
     public GameObject diamond;
     public GameObject van;
+    public GameObject backdoor;
     NavMeshAgent agent;
 
     public enum ActionState { IDLE, WORKING };
     ActionState state = ActionState.IDLE;
+    Nodes.Status treeStatus = Nodes.Status.RUNNING;
 
     // Start is called before the first frame update
     void Start()
@@ -19,16 +21,17 @@ public class RobBehaviour : MonoBehaviour
         agent = this.GetComponent<NavMeshAgent>();
 
         tree = new BehaviourTree();
-        Nodes steal = new Nodes("Steal Something");
+        Sequence steal = new Sequence("Steal Something");
         Leaf goToDiamond = new Leaf("Go To Diamond", GoToDiamond);
+        Leaf goTobac0kdoor = new Leaf("Go To Backdoor", GoToBackDoor);
         Leaf goToVan = new Leaf("Go to Van", GoToVan);
 
+        steal.AddChild(goTobac0kdoor);
         steal.AddChild(goToDiamond);
         steal.AddChild(goToVan);
         steal.AddChild(steal);
 
         tree.printTree();
-        tree.Process();
 
         
     }
@@ -41,6 +44,11 @@ public class RobBehaviour : MonoBehaviour
     public Nodes.Status GoToVan()
     {
         return GoToLocation(van.transform.position);
+    }
+
+    public Nodes.Status GoToBackDoor()
+    {
+        return GoToLocation(backdoor.transform.position);
     }
 
     Nodes.Status GoToLocation(Vector3 destination)
@@ -67,6 +75,7 @@ public class RobBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if(treeStatus == Nodes.Status.RUNNING)
+            treeStatus = tree.Process();
     }
 }
