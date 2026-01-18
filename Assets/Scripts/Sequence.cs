@@ -2,38 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Sequence : Nodes
-{
-    public Sequence(string n)
-    {
+public class Sequence : Node {
+
+    public Sequence(string n) {
+
         name = n;
     }
 
-    public override Status Process()
-    {
-        Status childstatus = children[currentChild].Process();
-        if (childstatus == Status.RUNNING) return Status.RUNNING;
-        if (childstatus == Status.FAILURE) return childstatus;
+    public override Status Process() {
+
+        Status childStatus = children[currentChild].Process();
+        if (childStatus == Status.RUNNING) return Status.RUNNING;
+        if (childStatus == Status.FAILURE) return childStatus;
 
         currentChild++;
-        if (currentChild >= children.Count)
-        {
+        if (currentChild >= children.Count) {
+
             currentChild = 0;
-            return Status.SUCESS;
+            return Status.SUCCESS;
         }
         return Status.RUNNING;
-    }
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
