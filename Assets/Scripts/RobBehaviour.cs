@@ -9,11 +9,16 @@ public class RobBehaviour : MonoBehaviour
     public GameObject diamond;
     public GameObject van;
     public GameObject backdoor;
+    public GameObject PdaFrente;
     NavMeshAgent agent;
+    
 
     public enum ActionState { IDLE, WORKING };
     ActionState state = ActionState.IDLE;
     Nodes.Status treeStatus = Nodes.Status.RUNNING;
+
+    [Range(0, 1000)]
+    public int money = 800;
 
     // Start is called before the first frame update
     void Start()
@@ -23,32 +28,81 @@ public class RobBehaviour : MonoBehaviour
         tree = new BehaviourTree();
         Sequence steal = new Sequence("Steal Something");
         Leaf goToDiamond = new Leaf("Go To Diamond", GoToDiamond);
+        Leaf HasGotMoney = new Leaf("Has Got Money", HasMoney);
         Leaf goTobac0kdoor = new Leaf("Go To Backdoor", GoToBackDoor);
         Leaf goToVan = new Leaf("Go to Van", GoToVan);
+        Leaf goToFronteckdoor = new Leaf("Go to FrontDoor", GoToFrontedoor);
+        Selector OPENDOOR = new Selector("OPEN DOOR");
 
-        steal.AddChild(goTobac0kdoor);
+
+        OPENDOOR.AddChild(goTobac0kdoor);
+        OPENDOOR.AddChild(goToFronteckdoor);
+
+        steal.AddChild(goToFronteckdoor);
+        steal.AddChild(OPENDOOR);
+        steal.AddChild(HasGotMoney);
+        //steal.AddChild(goTobac0kdoor);
         steal.AddChild(goToDiamond);
         steal.AddChild(goToVan);
         steal.AddChild(steal);
+        
 
         tree.printTree();
 
         
     }
+    public Nodes.Status HasMoney()
+    {
+        if (money >= 500)
+            return Nodes.Status.FAILURE;
+        return Nodes.Status.SUCESS;
+        
+    }
 
     public Nodes.Status GoToDiamond()
     {
-        return GoToLocation(diamond.transform.position);
+        Nodes.Status s = GoToLocation(diamond.transform.position);
+        if (s == Nodes.Status.SUCESS) 
+        {
+            diamond.transform.parent = this.gameObject.transform;
+        }
+        return s;
     }
 
     public Nodes.Status GoToVan()
     {
-        return GoToLocation(van.transform.position);
+        Nodes.Status s = GoToLocation(van.transform.position);
+        if (s == Nodes.Status.SUCESS)
+        {
+            money += 300;
+            diamond.SetActive(false);
+        }
+        return s;
     }
 
     public Nodes.Status GoToBackDoor()
     {
-        return GoToLocation(backdoor.transform.position);
+        return GoToDoor(backdoor);
+    }
+
+    public Nodes.Status GoToFrontedoor()
+    {
+        return GoToDoor(PdaFrente);
+    }
+
+    public Nodes.Status GoToDoor(GameObject door)
+    {
+        Nodes.Status s = GoToLocation(door.transform.position);
+        if (s == Nodes.Status.SUCESS)
+        {
+            if (!door.GetComponent<Lock>().isLocked)
+            {
+                door.SetActive(false);
+                return Nodes.Status.SUCESS;
+            }
+            return Nodes.Status.FAILURE;
+        }
+        else return s;
     }
 
     Nodes.Status GoToLocation(Vector3 destination)
@@ -75,7 +129,7 @@ public class RobBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(treeStatus == Nodes.Status.RUNNING)
+        if(treeStatus != Nodes.Status.SUCESS)
             treeStatus = tree.Process();
     }
 }
